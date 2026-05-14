@@ -38,7 +38,7 @@ the to-read graveyard.
 | 1 | Project foundation, `Paper` dataclass, base abstractions | 🚧 |
 | 2 | arXiv source | ✅ |
 | 3 | CrossRef (DOI → BibTeX) | ✅ |
-| 4 | DBLP / PubMed / IEEE sources (in progress: DBLP ✅) | 🚧 |
+| 4 | DBLP / PubMed / IEEE sources (in progress: DBLP ✅, PubMed ✅) | 🚧 |
 | 5 | Semantic Scholar / OpenAlex | ⏳ |
 | 6 | Deduplication | ⏳ |
 | 7 | CLI | ⏳ |
@@ -75,6 +75,16 @@ from paper_collector.sources.dblp import DBLPSource
 dblp = DBLPSource()
 for paper in dblp.search("attention is all you need", max_results=5):
     print(paper.title, paper.venue, paper.year)
+```
+
+Search PubMed from Python:
+
+```python
+from paper_collector.sources.pubmed import PubMedSource
+
+pubmed = PubMedSource()
+for paper in pubmed.search("optical coherence tomography", max_results=5):
+    print(paper.title, paper.year)
 ```
 
 Export results to a BibTeX file via CrossRef:

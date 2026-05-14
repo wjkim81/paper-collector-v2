@@ -37,7 +37,7 @@ the to-read graveyard.
 |-------|-------------|--------|
 | 1 | Project foundation, `Paper` dataclass, base abstractions | 🚧 |
 | 2 | arXiv source | ✅ |
-| 3 | CrossRef (DOI → BibTeX) | ⏳ |
+| 3 | CrossRef (DOI → BibTeX) | ✅ |
 | 4 | IEEE / PubMed / DBLP sources | ⏳ |
 | 5 | Semantic Scholar / OpenAlex | ⏳ |
 | 6 | Deduplication | ⏳ |
@@ -65,6 +65,28 @@ from paper_collector.sources.arxiv import ArxivSource
 source = ArxivSource()
 for paper in source.search("local conditional neural fields", max_results=5):
     print(paper.title, paper.arxiv_id)
+```
+
+Export results to a BibTeX file via CrossRef:
+
+```python
+from paper_collector.enrich.bibtex import papers_to_bibfile
+
+papers = list(source.search("neural fields", max_results=10))
+written, failures = papers_to_bibfile(papers, "references.bib")
+print(f"Wrote {written} entries; {len(failures)} failures.")
+```
+
+Enrich a Paper with publisher metadata (journal, year, etc.) when only
+a DOI is known:
+
+```python
+from paper_collector.core.paper import Paper
+from paper_collector.enrich.metadata import enrich_paper
+
+paper = Paper(doi="10.1038/s41586-021-03819-2")
+paper = enrich_paper(paper)
+print(paper.title, paper.venue, paper.year)
 ```
 
 ## License

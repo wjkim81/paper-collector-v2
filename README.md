@@ -39,7 +39,7 @@ the to-read graveyard.
 | 2 | arXiv source | ✅ |
 | 3 | CrossRef (DOI → BibTeX) | ✅ |
 | 4 | DBLP / PubMed / IEEE sources (in progress: DBLP ✅, PubMed ✅) | 🚧 |
-| 5 | Semantic Scholar / OpenAlex | ⏳ |
+| 5 | Semantic Scholar ✅ / OpenAlex ⏳ | 🚧 |
 | 6 | Deduplication | ⏳ |
 | 7 | CLI | ⏳ |
 | 8 | Notion export | ⏳ |
@@ -85,6 +85,18 @@ from paper_collector.sources.pubmed import PubMedSource
 pubmed = PubMedSource()
 for paper in pubmed.search("optical coherence tomography", max_results=5):
     print(paper.title, paper.year)
+```
+
+Fetch from Semantic Scholar by DOI, arXiv ID, or PMID (useful for
+cross-source enrichment; includes an AI-generated TLDR):
+
+```python
+from paper_collector.sources.semantic_scholar import SemanticScholarSource
+
+ss = SemanticScholarSource()
+# Fetch by DOI, arXiv ID, or PMID prefix — useful for enriching results.
+paper = ss.fetch_by_id("ARXIV:2307.06207")
+print(paper.title, paper.ai_summary)  # Includes AI-generated TLDR
 ```
 
 Export results to a BibTeX file via CrossRef:

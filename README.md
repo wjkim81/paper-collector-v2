@@ -3,7 +3,7 @@
 A modular, AI-assisted paper collection pipeline for researchers who 
 spend more time finding papers than reading them.
 
-**Status:** 🚧 Early development. Foundation phase.
+**Status:** 🚧 Active development. 4 working sources + BibTeX/metadata enrichment.
 
 ## Why this exists
 
@@ -31,19 +31,42 @@ the to-read graveyard.
 - **Notion integration** for persistent paper archives
 - **BibTeX export** via CrossRef content negotiation
 
+## Architecture
+
+```
+paper_collector/
+├── core/        Paper dataclass — the universal interface across sources
+├── sources/     One module per source (arXiv, DBLP, PubMed, Semantic Scholar)
+├── enrich/      Transformations that operate on Paper objects
+│                (CrossRef BibTeX, metadata enrichment)
+└── config.py    .env-based settings for optional API keys
+```
+
+Every source returns `Paper` objects with normalized fields and a
+`source_raw` payload preserving the original response for debugging
+or later re-parsing. This means new sources, new export formats, and
+new enrichment passes all compose without changes to existing code.
+
 ## Status
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| 1 | Project foundation, `Paper` dataclass, base abstractions | 🚧 |
+| 1 | Project foundation, `Paper` dataclass, base abstractions | ✅ |
 | 2 | arXiv source | ✅ |
-| 3 | CrossRef (DOI → BibTeX) | ✅ |
-| 4 | DBLP / PubMed / IEEE sources (in progress: DBLP ✅, PubMed ✅) | 🚧 |
-| 5 | Semantic Scholar ✅ / OpenAlex ⏳ | 🚧 |
-| 6 | Deduplication | ⏳ |
-| 7 | CLI | ⏳ |
-| 8 | Notion export | ⏳ |
-| 9 | AI screening & summarization | ⏳ |
+| 3 | CrossRef enrichment (DOI → BibTeX, metadata) | ✅ |
+| 4a | DBLP source | ✅ (search) / ⏳ (fetch_by_id — needs XML endpoint) |
+| 4b | PubMed source via NCBI E-utilities | ✅ |
+| 4c | IEEE Xplore source | ⏳ (API key activation pending) |
+| 5a | Semantic Scholar source (with AI TLDR) | ✅ |
+| 5b | OpenAlex source | ⏳ |
+| 6 | Deduplication across sources (DOI > arxiv > fuzzy title) | ⏳ |
+| 7 | CLI (`paper-collector search ...`) | ⏳ |
+| 8 | Notion integration (read + write) | ⏳ |
+| 9 | AI screening and summarization | ⏳ |
+
+**Current state:** 4 working sources (arXiv, DBLP, PubMed, Semantic Scholar)
++ 1 enrichment module (CrossRef). 111 unit tests, 13 integration tests.
+End-to-end pipelines working: search → Paper → BibTeX export.
 
 ## Installation
 

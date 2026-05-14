@@ -36,7 +36,7 @@ the to-read graveyard.
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 1 | Project foundation, `Paper` dataclass, base abstractions | 🚧 |
-| 2 | arXiv source | ⏳ |
+| 2 | arXiv source | ✅ |
 | 3 | CrossRef (DOI → BibTeX) | ⏳ |
 | 4 | IEEE / PubMed / DBLP sources | ⏳ |
 | 5 | Semantic Scholar / OpenAlex | ⏳ |
@@ -47,11 +47,25 @@ the to-read graveyard.
 
 ## Installation
 
-> Coming soon.
+Requires Python 3.11+ and [uv](https://github.com/astral-sh/uv).
+
+```bash
+git clone https://github.com/wjkim81/paper-collector-v2.git
+cd paper-collector-v2
+uv sync
+```
 
 ## Usage
 
-> Coming soon.
+Search arXiv from Python:
+
+```python
+from paper_collector.sources.arxiv import ArxivSource
+
+source = ArxivSource()
+for paper in source.search("local conditional neural fields", max_results=5):
+    print(paper.title, paper.arxiv_id)
+```
 
 ## License
 

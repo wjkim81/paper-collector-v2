@@ -38,7 +38,7 @@ the to-read graveyard.
 | 1 | Project foundation, `Paper` dataclass, base abstractions | 🚧 |
 | 2 | arXiv source | ✅ |
 | 3 | CrossRef (DOI → BibTeX) | ✅ |
-| 4 | IEEE / PubMed / DBLP sources | ⏳ |
+| 4 | DBLP / PubMed / IEEE sources (in progress: DBLP ✅) | 🚧 |
 | 5 | Semantic Scholar / OpenAlex | ⏳ |
 | 6 | Deduplication | ⏳ |
 | 7 | CLI | ⏳ |
@@ -65,6 +65,16 @@ from paper_collector.sources.arxiv import ArxivSource
 source = ArxivSource()
 for paper in source.search("local conditional neural fields", max_results=5):
     print(paper.title, paper.arxiv_id)
+```
+
+Search DBLP from Python:
+
+```python
+from paper_collector.sources.dblp import DBLPSource
+
+dblp = DBLPSource()
+for paper in dblp.search("attention is all you need", max_results=5):
+    print(paper.title, paper.venue, paper.year)
 ```
 
 Export results to a BibTeX file via CrossRef:

@@ -15,8 +15,9 @@ from paper_collector.sources.pubmed import PubMedSource
 pytestmark = pytest.mark.integration
 
 
-# AlphaFold paper PMID — famously stable.
-ALPHAFOLD_PMID = "33887189"
+# AlphaFold paper PMID — Jumper et al. Nature 2021.
+# https://pubmed.ncbi.nlm.nih.gov/34265844/
+ALPHAFOLD_PMID = "34265844"
 
 
 def test_live_search_returns_results() -> None:

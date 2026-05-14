@@ -148,9 +148,16 @@ class DBLPSource(BaseSource):
     def fetch_by_id(self, identifier: str) -> Paper | None:
         """Fetch a single paper by its DBLP key.
 
-        Uses DBLP's per-record endpoint `https://dblp.org/rec/{key}.json`
-        which performs an exact lookup (the search API's `q=` parameter
-        does free-text matching, not literal key matching).
+        NOTE: This method is currently incomplete. DBLP's per-record API
+        only exposes `.xml` and `.bib` formats (not JSON), and the
+        search API's `q=` parameter does free-text matching, not literal
+        key matching. As a result this method always returns None for
+        valid keys.
+
+        For now, callers should use `search()` and filter by `dblp_key`
+        themselves, or fall back to another source. A future fix will
+        either parse the XML per-record endpoint or use a different
+        DBLP API.
 
         Args:
             identifier: A DBLP key such as "conf/nips/VaswaniSPUJGKP17"
@@ -159,6 +166,8 @@ class DBLPSource(BaseSource):
         Returns:
             A Paper if found, None if the key does not exist.
         """
+        # TODO(dblp): /rec/{key}.json doesn't exist; need to parse
+        # /rec/{key}.xml or use SPARQL endpoint.
         normalized = identifier.strip()
         self.logger.info("dblp fetch_by_id: key=%r", normalized)
 

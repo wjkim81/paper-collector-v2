@@ -1,0 +1,86 @@
+# ---------------------------------------------------------------------------
+# .gitignore for paper-collector-v2
+# Python project managed with uv.
+# ---------------------------------------------------------------------------
+
+# Secrets and local configuration
+.env
+.env.local
+.env.*.local
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+wheels/
+pip-wheel-metadata/
+
+# Type checker and linter caches
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.pyre/
+
+# Test and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# Notebooks
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Editor and IDE
+.vscode/
+*.code-workspace
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Data and outputs (collected papers, exports, caches)
+data/
+output/
+outputs/
+cache/
+*.parquet
+*.pkl
+*.pickle
+
+# Allow CSV/JSON in repo root (e.g., example data), ignore them elsewhere
+/**/*.csv
+!example.csv
+/**/*.json
+!.env.example
+!pyproject.toml
+!**/package.json
+
+# Logs
+*.log
+logs/
+
+# OS junk
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+ehthumbs.db
+desktop.ini

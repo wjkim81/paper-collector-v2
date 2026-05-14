@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import httpx
 import pytest
 
 from paper_collector.sources.base import SourceConfig
@@ -191,23 +192,39 @@ def test_search_respects_max_results(source: DBLPSource) -> None:
 # ----------------------------------------------------------------------
 
 
-def test_fetch_by_id_returns_paper_when_key_matches(source: DBLPSource) -> None:
-    """fetch_by_id returns the Paper when key matches a hit."""
-    with patch.object(source, "_get", return_value=SAMPLE_RESPONSE_MULTI):
+def test_fetch_by_id_returns_paper_on_hit(source: DBLPSource) -> None:
+    """fetch_by_id returns the Paper when the per-record endpoint returns it."""
+    # /rec/{key}.json wraps a single record as result.hits.hit
+    rec_response = {"result": {"hits": {"@total": "1", "hit": SAMPLE_HIT_MULTI_AUTHOR}}}
+    with patch.object(source, "_get_url", return_value=rec_response):
         paper = source.fetch_by_id("conf/nips/VaswaniSPUJGKP17")
     assert paper is not None
     assert paper.title == "Attention Is All You Need"
+    assert paper.dblp_key == "conf/nips/VaswaniSPUJGKP17"
 
 
-def test_fetch_by_id_returns_none_when_no_match(source: DBLPSource) -> None:
-    """fetch_by_id returns None if no hit's key matches."""
-    with patch.object(source, "_get", return_value=SAMPLE_RESPONSE_MULTI):
-        paper = source.fetch_by_id("conf/something/Nonexistent")
+def test_fetch_by_id_returns_none_on_404() -> None:
+    """fetch_by_id returns None when the record endpoint returns 404."""
+    from paper_collector.sources.base import SourceConfig
+
+    src = DBLPSource(
+        config=SourceConfig(
+            name="dblp", rate_limit_per_second=0.0, max_retries=1, timeout_seconds=5.0
+        )
+    )
+
+    request = httpx.Request("GET", "https://dblp.org/rec/x.json")
+    response = httpx.Response(404, request=request)
+    error = httpx.HTTPStatusError("not found", request=request, response=response)
+
+    with patch.object(src, "_get_url", side_effect=error):
+        paper = src.fetch_by_id("conf/nonexistent/Key")
     assert paper is None
 
 
-def test_fetch_by_id_returns_none_when_empty(source: DBLPSource) -> None:
-    """fetch_by_id returns None on empty response."""
-    with patch.object(source, "_get", return_value=SAMPLE_RESPONSE_EMPTY):
-        paper = source.fetch_by_id("anything")
+def test_fetch_by_id_returns_none_on_empty_payload(source: DBLPSource) -> None:
+    """fetch_by_id returns None if the payload has no hits."""
+    empty_response = {"result": {"hits": {"@total": "0"}}}
+    with patch.object(source, "_get_url", return_value=empty_response):
+        paper = source.fetch_by_id("conf/empty/Key")
     assert paper is None

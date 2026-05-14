@@ -24,6 +24,7 @@ from paper_collector.core.paper import Paper
 from paper_collector.sources.base import BaseSource, SourceConfig
 
 DBLP_API_URL = "https://dblp.org/search/publ/api"
+DBLP_REC_URL = "https://dblp.org/rec/{key}.json"
 DEFAULT_RATE_LIMIT = 1.0  # 1 request per second (polite default)
 
 
@@ -147,23 +148,33 @@ class DBLPSource(BaseSource):
     def fetch_by_id(self, identifier: str) -> Paper | None:
         """Fetch a single paper by its DBLP key.
 
-        DBLP keys look like "conf/cvpr/SmithJ20" or "journals/nature/Foo24".
-        DBLP doesn't offer a dedicated by-key endpoint via the search API,
-        so we search for the key directly and filter results.
+        Uses DBLP's per-record endpoint `https://dblp.org/rec/{key}.json`
+        which performs an exact lookup (the search API's `q=` parameter
+        does free-text matching, not literal key matching).
 
         Args:
-            identifier: A DBLP key.
+            identifier: A DBLP key such as "conf/nips/VaswaniSPUJGKP17"
+                or "journals/nature/Foo24".
 
         Returns:
-            A Paper if found, None otherwise.
+            A Paper if found, None if the key does not exist.
         """
         normalized = identifier.strip()
         self.logger.info("dblp fetch_by_id: key=%r", normalized)
-        hits = self._fetch_page(normalized, start=0, page_size=10)
-        for hit in hits:
-            if hit.get("info", {}).get("key") == normalized:
-                return self._hit_to_paper(hit)
-        return None
+
+        url = DBLP_REC_URL.format(key=normalized)
+        self._respect_rate_limit()
+        try:
+            data = self._get_url(url)
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                return None
+            raise
+
+        hit = _record_response_to_hit(data, key=normalized)
+        if hit is None:
+            return None
+        return self._hit_to_paper(hit)
 
     # ------------------------------------------------------------------
     # Internals
@@ -209,6 +220,24 @@ class DBLPSource(BaseSource):
             data: dict[str, Any] = response.json()
             return data
 
+    @retry(
+        retry=retry_if_exception_type((httpx.HTTPError, httpx.TimeoutException)),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=30),
+        reraise=True,
+    )
+    def _get_url(self, url: str) -> dict[str, Any]:
+        """Issue a GET request to a specific DBLP URL with retry.
+
+        Used by fetch_by_id for the per-record endpoint, which uses a
+        path-style URL rather than search parameters.
+        """
+        with httpx.Client(timeout=self.config.timeout_seconds) as client:
+            response = client.get(url)
+            response.raise_for_status()
+            data: dict[str, Any] = response.json()
+            return data
+
     def _respect_rate_limit(self) -> None:
         """Sleep if needed to honor the configured rate limit."""
         if self.config.rate_limit_per_second <= 0:
@@ -244,3 +273,24 @@ class DBLPSource(BaseSource):
             source="dblp",
             source_raw=hit,
         )
+
+
+def _record_response_to_hit(data: dict[str, Any], *, key: str) -> dict[str, Any] | None:
+    """Convert a /rec/{key}.json response into the same shape as a hit.
+
+    The per-record endpoint wraps the publication under
+    `result.hits.hit`, but the structure can collapse to a dict when
+    there's a single record. Returns a hit dict that `_hit_to_paper`
+    can consume, or None if no record is present.
+    """
+    result = data.get("result", {})
+    hits_block = result.get("hits", {})
+    raw_hits = hits_block.get("hit")
+    if raw_hits is None:
+        return None
+    if isinstance(raw_hits, dict):
+        return raw_hits
+    if isinstance(raw_hits, list) and raw_hits:
+        first: dict[str, Any] = raw_hits[0]
+        return first
+    return None
